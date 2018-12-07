@@ -69,9 +69,9 @@ RUN	apt-get update && apt-get --no-install-recommends install -y curl libcurl4-o
 #################################
 # Set env variables and create installation dirs
 ENV JSONCPP_URL="https://github.com/open-source-parsers/jsoncpp.git"
-ENV JSONCPP_SRC_DIR=${SOFTDIR_SRCS}/jsoncpp"	
-ENV JSONCPP_BUILD_DIR=${SOFTDIR_SRCS}/jsoncpp-build"
-ENV JSONCPP_INSTALL_DIR=${SOFTDIR}/jsoncpp/trunk"
+ENV JSONCPP_SRC_DIR="${SOFTDIR_SRCS}/jsoncpp"	
+ENV JSONCPP_BUILD_DIR="${SOFTDIR_SRCS}/jsoncpp-build"
+ENV JSONCPP_INSTALL_DIR="${SOFTDIR}/jsoncpp/trunk"
 	
 RUN mkdir -p ${JSONCPP_BUILD_DIR} \ 
 	&& mkdir -p ${JSONCPP_INSTALL_DIR}
