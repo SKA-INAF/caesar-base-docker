@@ -59,8 +59,9 @@ RUN echo "export PYTHONPATH=${PYTHONPATH}" >> ${SETVARS_FILE}
 # Install libx11-dev libxpm-dev libxft-dev libxext-dev libpng12-dev libjpeg-dev (needed by ROOT)
 # Install libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev (needed by OpenCV)
 # Install lsb-core??
+# Install libssl-dev (needed by cmake)
 	
-RUN	apt-get update && apt-get --no-install-recommends install -y curl libcurl4-openssl-dev libopenblas-dev libxcb-dri3-dev libgl1-mesa-dev libglu1-mesa-dev libnuma-dev libpciaccess-dev libboost-all-dev libgsl-dev libprotobuf-dev protobuf-compiler liblog4cxx-dev libcfitsio-dev libx11-dev libxpm-dev libxft-dev libxext-dev libpng12-dev libjpeg-dev libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev
+RUN	apt-get update && apt-get --no-install-recommends install -y curl libcurl4-openssl-dev libopenblas-dev libxcb-dri3-dev libgl1-mesa-dev libglu1-mesa-dev libnuma-dev libpciaccess-dev libboost-all-dev libgsl-dev libprotobuf-dev protobuf-compiler liblog4cxx-dev libcfitsio-dev libx11-dev libxpm-dev libxft-dev libxext-dev libpng12-dev libjpeg-dev libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libssl-dev
 ## RUN apt-get --no-install-recommends install -y lsb-core
 
 	
