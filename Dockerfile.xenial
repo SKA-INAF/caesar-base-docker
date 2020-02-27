@@ -69,9 +69,9 @@ RUN	apt-get update && apt-get --no-install-recommends install -y curl libcurl4-o
 #################################
 # NB: Required >3.8 by jsoncpp
 ENV CMAKE_VERSION="3.16.4"
-ENV CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v{CMAKE_VERSION}/cmake-{CMAKE_VERSION}.tar.gz"
-ENV CMAKE_SRC_DIR="${SOFTDIR_SRCS}/cmake-{CMAKE_VERSION}"	
-ENV CMAKE_INSTALL_DIR="${SOFTDIR}/cmake/v{CMAKE_VERSION}"
+ENV CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz"
+ENV CMAKE_SRC_DIR="${SOFTDIR_SRCS}/cmake-${CMAKE_VERSION}"	
+ENV CMAKE_INSTALL_DIR="${SOFTDIR}/cmake/v${CMAKE_VERSION}"
 
 # Create install dir
 RUN mkdir -p ${CMAKE_INSTALL_DIR}
@@ -82,7 +82,7 @@ RUN wget ${CMAKE_URL}
 
 # Untar file
 WORKDIR ${SOFTDIR_SRCS}
-RUN tar xzvf ${SOFTDIR_TAR}/cmake-{CMAKE_VERSION}.tar.gz
+RUN tar xzvf ${SOFTDIR_TAR}/cmake-${CMAKE_VERSION}.tar.gz
 
 # Configure, build and install
 WORKDIR ${CMAKE_SRC_DIR}
@@ -110,7 +110,7 @@ WORKDIR ${SOFTDIR_SRCS}
 RUN git clone ${JSONCPP_URL}
 
 WORKDIR ${JSONCPP_BUILD_DIR}
-RUN $CMAKE_RECENT -DCMAKE_INSTALL_PREFIX=${JSONCPP_INSTALL_DIR} -DBUILD_SHARED_LIBS=ON -DJSONCPP_WITH_PKGCONFIG_SUPPORT=ON ${JSONCPP_SRC_DIR} \
+RUN ${CMAKE_RECENT} -DCMAKE_INSTALL_PREFIX=${JSONCPP_INSTALL_DIR} -DBUILD_SHARED_LIBS=ON -DJSONCPP_WITH_PKGCONFIG_SUPPORT=ON ${JSONCPP_SRC_DIR} \
   && make \
   && make install
 
