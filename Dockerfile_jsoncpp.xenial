@@ -1,0 +1,35 @@
+FROM sriggi/ubuntu16.04:latest
+MAINTAINER Simone Riggi "simone.riggi@gmail.com"
+
+#################################
+###    JSONCPP
+#################################
+# Set env variables and create installation dirs
+ENV JSONCPP_URL="https://github.com/open-source-parsers/jsoncpp.git"
+ENV JSONCPP_SRC_DIR="${SOFTDIR_SRCS}/jsoncpp"	
+ENV JSONCPP_BUILD_DIR="${SOFTDIR_SRCS}/jsoncpp-build"
+ENV JSONCPP_INSTALL_DIR="${SOFTDIR}/jsoncpp/trunk"
+	
+RUN mkdir -p ${JSONCPP_BUILD_DIR} \ 
+	&& mkdir -p ${JSONCPP_INSTALL_DIR}
+
+# Install jsoncpp
+WORKDIR ${SOFTDIR_SRCS}
+RUN git clone ${JSONCPP_URL}
+
+WORKDIR ${JSONCPP_BUILD_DIR}
+RUN ${CMAKE_RECENT} -DCMAKE_INSTALL_PREFIX=${JSONCPP_INSTALL_DIR} -DBUILD_SHARED_LIBS=ON -DJSONCPP_WITH_PKGCONFIG_SUPPORT=ON ${JSONCPP_SRC_DIR} \
+  && make \
+  && make install
+
+# Set env vars
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${JSONCPP_INSTALL_DIR}/lib
+ENV PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${JSONCPP_INSTALL_DIR}/lib/pkgconfig
+
+RUN echo "export JSONCPP_ROOT=${JSONCPP_INSTALL_DIR}" >> ${SETVARS_FILE}
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$JSONCPP_ROOT/lib' >> ${SETVARS_FILE}
+RUN echo 'export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$JSONCPP_ROOT/lib/pkgconfig' >> ${SETVARS_FILE}
+
+## Clear source & build dir	
+RUN rm -rf ${JSONCPP_SRC_DIR} \
+	&& rm -rf ${JSONCPP_BUILD_DIR}
