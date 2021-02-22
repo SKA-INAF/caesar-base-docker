@@ -1,0 +1,50 @@
+FROM sriggi/ubuntu16.04:latest
+MAINTAINER Simone Riggi "simone.riggi@gmail.com"
+
+#################################
+###    OPENCV
+#################################
+##ENV OPENCV_VERSION="3.4.0"
+ENV OPENCV_VERSION="3.4.11"
+ENV OPENCV_URL="https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.tar.gz"
+ENV OPENCV_EXTRA_MODULES_REPO_URL="https://github.com/opencv/opencv_contrib/archive/${OPENCV_VERSION}.tar.gz"
+ENV OPENCV_SRC_DIR="${SOFTDIR_SRCS}/opencv-${OPENCV_VERSION}"	
+ENV OPENCV_EXTRA_MODULES_SRC_DIR="${SOFTDIR_SRCS}/opencv_contrib-${OPENCV_VERSION}"		
+ENV OPENCV_BUILD_DIR="${SOFTDIR_SRCS}/opencv-${OPENCV_VERSION}"'-build'
+ENV OPENCV_INSTALL_DIR="${SOFTDIR}/OpenCV/v${OPENCV_VERSION}"
+ENV OPENCV_DIR="${OPENCV_INSTALL_DIR}"
+
+RUN mkdir -p ${OPENCV_BUILD_DIR} \
+	&& mkdir -p ${OPENCV_INSTALL_DIR}
+
+# Download & install OpenCV & extra modules
+WORKDIR ${SOFTDIR_TAR}
+RUN wget -nc -O opencv${OPENCV_VERSION}.tar.gz ${OPENCV_URL} \
+  && wget -nc -O opencv_contrib${OPENCV_VERSION}.tar.gz ${OPENCV_EXTRA_MODULES_REPO_URL}
+
+WORKDIR ${SOFTDIR_SRCS}
+RUN tar -xzvf ${SOFTDIR_TAR}/opencv${OPENCV_VERSION}.tar.gz \
+	&& tar -xzvf ${SOFTDIR_TAR}/opencv_contrib${OPENCV_VERSION}.tar.gz
+
+WORKDIR ${OPENCV_BUILD_DIR}
+RUN cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=${OPENCV_INSTALL_DIR} -DOPENCV_EXTRA_MODULES_PATH=${OPENCV_EXTRA_MODULES_SRC_DIR}/modules ${OPENCV_SRC_DIR} \
+	&& make \
+	&& make install
+
+# Setting environment variables
+ENV PATH=${PATH}:${OPENCV_INSTALL_DIR}/bin
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${OPENCV_INSTALL_DIR}/lib
+ENV PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${OPENCV_INSTALL_DIR}/lib/pkgconfig
+		
+RUN echo "export OPENCV_DIR=${OPENCV_INSTALL_DIR}" >> ${SETVARS_FILE}
+RUN echo 'export PATH=$PATH:$OPENCV_DIR/bin' >> ${SETVARS_FILE}
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OPENCV_DIR/lib' >> ${SETVARS_FILE}
+RUN echo 'export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$OPENCV_DIR/lib/pkgconfig' >> ${SETVARS_FILE}
+
+# Clear source & tar 
+RUN rm -rf ${OPENCV_SRC_DIR} \
+	&& rm -rf ${OPENCV_BUILD_DIR} \
+	&& rm -rf ${SOFTDIR_TAR}/opencv${OPENCV_VERSION}.tar.gz || : \
+	&& rm -rf ${SOFTDIR_TAR}/opencv_contrib${OPENCV_VERSION}.tar.gz || :
+
+
