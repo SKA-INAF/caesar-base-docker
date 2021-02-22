@@ -1,0 +1,112 @@
+FROM ubuntu:16.04
+MAINTAINER Simone Riggi "simone.riggi@gmail.com"
+
+#################################
+###    CREATE DIRS
+#################################	
+# Define env variables
+ENV SOFTDIR=/opt/Software
+ENV SOFTDIR_SRCS=${SOFTDIR}/Sources
+ENV SOFTDIR_TAR=${SOFTDIR}/TarFiles
+
+# Create tar files & source dirs
+RUN mkdir -p $SOFTDIR \
+	&& mkdir -p $SOFTDIR_SRCS \
+	&& mkdir -p $SOFTDIR_TAR
+
+# Create a setvars file
+ENV SETVARS_FILE=/etc/profile.d/setupSoft.sh
+
+RUN echo '#!/bin/sh' > ${SETVARS_FILE}
+RUN echo "export SOFTDIR=${SOFTDIR}" >> ${SETVARS_FILE}
+RUN echo "export SOFTDIR_SRCS=${SOFTDIR_SRCS}" >> ${SETVARS_FILE}
+RUN echo "export SOFTDIR_TAR=${SOFTDIR_TAR}" >> ${SETVARS_FILE}
+RUN echo '' >> ${SETVARS_FILE}
+
+#################################
+###    DEVTOOLS & SYS TOOLS
+#################################		
+# Install devel tools
+RUN apt-get update && apt-get --no-install-recommends install -y apt-utils gfortran g++ gcc binutils libtool pkg-config build-essential autoconf automake debconf-utils software-properties-common dpkg-dev git cmake wget bzip2 nano unzip locate less ca-certificates curl
+	
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/lib/x86_64-linux-gnu/
+RUN echo 'export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH' >> ${SETVARS_FILE}
+
+#################################
+###    PYTHON MODULES
+#################################
+# Install python2
+RUN apt-get update && apt-get --no-install-recommends install -y libpython2.7-dev python-setuptools python-pip python-tk
+
+
+#################################
+###    BASIC LIBS & TOOLS
+#################################
+# Install libxcb-dri3-dev needed to replace CASA bugged lib
+# Install numa lib for MPI
+# Install boost (in Ubuntu 16 version 1.58)
+# Install GSL lib (in Ubuntu 16 version 2.1)
+# Install Google protocol buffer (in Ubuntu 16 version 2.6.1)
+# Install log4cxx (in Ubuntu 10 version 0.10)
+# Install cfitsio (in Ubuntu 16 version 3.370)
+# Install libx11-dev libxpm-dev libxft-dev libxext-dev libpng12-dev libjpeg-dev (needed by ROOT)
+# Install libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev (needed by OpenCV)
+# Install lsb-core??
+# Install libssl-dev (needed by cmake)
+	
+RUN	apt-get update && apt-get --no-install-recommends install -y libcurl4-openssl-dev libopenblas-dev libxcb-dri3-dev libgl1-mesa-dev libglu1-mesa-dev libnuma-dev libpciaccess-dev libboost-all-dev libgsl-dev libprotobuf-dev protobuf-compiler liblog4cxx-dev libcfitsio-dev libx11-dev libxpm-dev libxft-dev libxext-dev libpng12-dev libjpeg-dev libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libssl-dev libcurl3 openssl libssl-dev uuid-dev libcap-dev libpcre3-dev util-linux openssh-client openssh-server
+## RUN apt-get --no-install-recommends install -y lsb-core
+
+
+#################################
+###    PYTHON3 & MODULES
+#################################
+# - Install python3.6
+RUN unset PYTHONPATH && add-apt-repository ppa:deadsnakes/ppa && apt-get update && apt-get install -y python3.6 python3.6-dev 
+
+# - Install pip3.6
+RUN unset PYTHONPATH && curl https://bootstrap.pypa.io/get-pip.py | python3.6
+
+# Install pip & modules
+RUN pip3.6 install --upgrade numpy astropy scipy scikit-image scikit-learn matplotlib six argparse photutils ipython region
+
+ENV PYTHONPATH=/usr/lib/python3.6:/usr/lib/python3.6/site-packages:/usr/lib/python3.6/dist-packages:/usr/lib/python3.6/plat-x86_64-linux-gnu:/usr/lib/python3.6/lib-tk:/usr/lib/python3.6/lib-old:/usr/lib/python3.6/lib-dynload:/usr/local/lib/python3.6/dist-packages:${PYTHONPATH}
+RUN echo "export PYTHONPATH=${PYTHONPATH}" >> ${SETVARS_FILE}
+
+
+#################################
+###    CMAKE
+#################################
+# NB: Required >3.8 by jsoncpp
+ENV CMAKE_VERSION="3.16.4"
+ENV CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz"
+ENV CMAKE_SRC_DIR="${SOFTDIR_SRCS}/cmake-${CMAKE_VERSION}"	
+ENV CMAKE_INSTALL_DIR="${SOFTDIR}/cmake/v${CMAKE_VERSION}"
+
+# Create install dir
+RUN mkdir -p ${CMAKE_INSTALL_DIR}
+
+# Download tar file
+WORKDIR ${SOFTDIR_TAR}
+RUN wget ${CMAKE_URL}
+
+# Untar file
+WORKDIR ${SOFTDIR_SRCS}
+RUN tar xzvf ${SOFTDIR_TAR}/cmake-${CMAKE_VERSION}.tar.gz
+
+# Configure, build and install
+WORKDIR ${CMAKE_SRC_DIR}
+RUN ./bootstrap --prefix=${CMAKE_INSTALL_DIR}\
+	&& make \
+	&& make install
+
+# Clear source & tar 	
+RUN rm -rf ${CMAKE_SRC_DIR} \
+	&& rm -rf ${SOFTDIR_TAR}/cmake-${CMAKE_VERSION}.tar.gz || :
+
+# Set env var
+ENV CMAKE_RECENT=${CMAKE_INSTALL_DIR}/bin/cmake
+
+
+
+
