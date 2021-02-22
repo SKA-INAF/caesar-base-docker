@@ -1,0 +1,55 @@
+FROM sriggi/ubuntu16.04:latest
+MAINTAINER Simone Riggi "simone.riggi@gmail.com"
+
+#################################
+###    ROOT
+#################################
+ENV ROOT_VERSION="6.14.06"
+ENV ROOT_URL="https://root.cern.ch/download/root_v${ROOT_VERSION}"'.source.tar.gz'
+ENV ROOT_SRC_DIR="${SOFTDIR_SRCS}/root-${ROOT_VERSION}"
+ENV ROOT_BUILD_DIR="${SOFTDIR_SRCS}/root-${ROOT_VERSION}"'-build'
+ENV ROOT_INSTALL_DIR="${SOFTDIR}/ROOT/v${ROOT_VERSION}"
+ENV ROOT_LOGON_DIR="${SOFTDIR}"
+ENV ROOT_LOGON_FILE="${ROOT_LOGON_DIR}/rootlogon.C"
+	
+RUN mkdir -p ${ROOT_BUILD_DIR} \
+	&& mkdir -p ${ROOT_INSTALL_DIR}
+	
+## Download & install
+WORKDIR ${SOFTDIR_TAR}
+RUN wget -nc -O root${ROOT_VERSION}.tar.gz ${ROOT_URL}
+
+WORKDIR ${SOFTDIR_SRCS} 
+##RUN git clone ${ROOT_URL} \
+##	&& mv root root-${ROOT_VERSION}
+RUN tar -xzvf ${SOFTDIR_TAR}/root${ROOT_VERSION}.tar.gz
+
+
+WORKDIR ${ROOT_BUILD_DIR}
+RUN alias python=python3.6 && cmake -DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL_DIR} -Dfitsio=ON -Dgsl_shared=ON -Dmathmore=ON -Dminuit2=ON -Dpython=ON -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -Droofit=ON -Dshared=ON -Dsoversion=ON -Dtmva=ON -Dunuran=ON -Dx11=ON -Dxft=ON -Dvdt=OFF ${ROOT_SRC_DIR} \
+	&& make \
+	&& make install
+
+# Copying cmake module FindROOT in etc dir
+RUN mkdir -p ${ROOT_INSTALL_DIR}/etc/cmake \
+	&& cp ${ROOT_SRC_DIR}/etc/cmake/FindROOT.cmake ${ROOT_INSTALL_DIR}/etc/cmake \
+  && cp ${ROOT_SRC_DIR}/etc/cmake/RootUseFile.cmake ${ROOT_INSTALL_DIR}/etc/cmake
+	
+# Setting environment variables
+ENV PATH=${PATH}:${ROOT_INSTALL_DIR}/bin
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_INSTALL_DIR}/lib:${ROOT_INSTALL_DIR}/root/lib
+ENV PYTHONPATH=${PYTHONPATH}:${ROOT_INSTALL_DIR}/lib
+
+RUN echo "export ROOTSYS=${ROOT_INSTALL_DIR}" >> ${SETVARS_FILE}
+RUN echo 'export ROOT_LOGON_DIR='"$ROOT_LOGON_DIR" >> ${SETVARS_FILE}
+RUN echo 'export PATH=$PATH:$ROOTSYS/bin' >> ${SETVARS_FILE}
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib:$ROOTSYS/root/lib' >> ${SETVARS_FILE}
+RUN echo 'export PYTHONPATH=$PYTHONPATH:$ROOTSYS/lib' >> ${SETVARS_FILE}
+	
+# Editing systemrc rootlogon line	
+RUN sed -i "s|^Rint.Logon:.*|Rint.Logon: ${ROOT_LOGON_DIR}/rootlogon.C|" "${ROOT_INSTALL_DIR}/etc/system.rootrc"
+
+# Clear source & tar dirs
+RUN rm -rf ${ROOT_SRC_DIR} \
+	&& rm -rf ${ROOT_BUILD_DIR} \
+	&& rm -rf ${SOFTDIR_TAR}/root${ROOT_VERSION}.tar.gz || :
