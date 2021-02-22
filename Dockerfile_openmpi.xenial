@@ -1,0 +1,38 @@
+FROM sriggi/ubuntu16.04:latest
+MAINTAINER Simone Riggi "simone.riggi@gmail.com"
+
+#################################
+###    OPENMPI
+#################################
+ENV OPENMPI_VERSION="2.1.2"
+ENV OPENMPI_URL="https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-${OPENMPI_VERSION}.tar.gz"
+ENV OPENMPI_SRC_DIR="${SOFTDIR_SRCS}/openmpi-${OPENMPI_VERSION}"	
+ENV OPENMPI_INSTALL_DIR="${SOFTDIR}/openmpi/v${OPENMPI_VERSION}"
+
+# Download & install
+RUN mkdir -p ${OPENMPI_INSTALL_DIR}
+
+WORKDIR ${SOFTDIR_TAR}
+RUN wget -nc -O openmpi${OPENMPI_VERSION}.tar.gz ${OPENMPI_URL} 
+
+WORKDIR ${SOFTDIR_SRCS}
+RUN tar -xzvf ${SOFTDIR_TAR}/openmpi${OPENMPI_VERSION}.tar.gz
+
+WORKDIR ${OPENMPI_SRC_DIR}
+RUN ./configure --prefix=${OPENMPI_INSTALL_DIR} \
+	&& make all install
+
+# Define vars
+ENV PATH=${OPENMPI_INSTALL_DIR}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${OPENMPI_INSTALL_DIR}/lib:${LD_LIBRARY_PATH}
+ENV PKG_CONFIG_PATH=${OPENMPI_INSTALL_DIR}/lib/pkgconfig:${PKG_CONFIG_PATH}
+
+RUN echo "export OPENMPI_DIR=${OPENMPI_INSTALL_DIR}" >> ${SETVARS_FILE}
+RUN echo 'export PATH=$OPENMPI_DIR/bin:$PATH' >> ${SETVARS_FILE}
+RUN echo 'export LD_LIBRARY_PATH=$OPENMPI_DIR/lib:$LD_LIBRARY_PATH' >> ${SETVARS_FILE}
+RUN echo 'export PKG_CONFIG_PATH=$OPENMPI_DIR/lib/pkgconfig:$PKG_CONFIG_PATH' >> ${SETVARS_FILE}
+
+# Clear source & tar 	
+RUN rm -rf ${OPENMPI_SRC_DIR} \
+	&& rm -rf ${SOFTDIR_TAR}/openmpi${OPENMPI_VERSION}.tar.gz || :
+
