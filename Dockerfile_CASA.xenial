@@ -1,0 +1,49 @@
+FROM sriggi/ubuntu16.04:latest
+MAINTAINER Simone Riggi "simone.riggi@gmail.com"
+
+#################################
+###    CASA NRAO
+#################################
+ENV CASA_VERSION="5.1.1"
+ENV CASA_VERSION_MINOR="5"
+ENV CASA_URL="https://casa.nrao.edu/download/distro/linux/release/el7/casa-release-${CASA_VERSION}-${CASA_VERSION_MINOR}"'.el7.tar.gz'
+ENV CASA_UNTAR_DIR="casa-release-$CASA_VERSION-$CASA_VERSION_MINOR.el7"
+ENV CASA_BASE_DIR="${SOFTDIR}/CASA"
+ENV CASA_INSTALL_DIR="${CASA_BASE_DIR}/v${CASA_VERSION}"
+ENV CASASRC="${CASA_BASE_DIR}/.casa"
+ENV CASA_LOGON_FILE="${CASASRC}/init.py"
+ENV CASALD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+
+RUN mkdir -p ${CASA_BASE_DIR} \
+	&& mkdir -p ${CASASRC} \
+	&& chmod -R a+rwx ${CASASRC}
+
+# Download & install CASA
+WORKDIR ${SOFTDIR_TAR}
+RUN wget -nc -O casa${CASA_VERSION}.tar.gz ${CASA_URL}
+
+WORKDIR ${CASA_BASE_DIR}
+RUN tar -xzvf ${SOFTDIR_TAR}/casa${CASA_VERSION}.tar.gz	\
+	&& mv ${CASA_UNTAR_DIR} v${CASA_VERSION}
+
+
+# Setting environment variables
+# NB: Do not add CASA python lib dir to PYTHONPATH because it will screw up python (changes site.py with CASA site.py)
+# NB: Never ever put CASA stuff paths before your system path!!!
+# NB: Define CASALD_LIBRARY_PATH and set it to LD_LIBRARY_PATH because casa startup script has a nasty statement that removes your LD_LIBRARY_PATH (yes, CASA sucks)!!!
+ENV PATH=${PATH}:${CASA_INSTALL_DIR}/bin
+	
+RUN echo "export CASAPATH=${CASA_INSTALL_DIR}" >> ${SETVARS_FILE}
+RUN echo "export CASA_DIR=${CASA_INSTALL_DIR}" >> ${SETVARS_FILE}
+RUN echo "export CASASRC=${CASASRC}" >> ${SETVARS_FILE}
+RUN echo 'export PATH=$PATH:$CASA_DIR/bin' >> ${SETVARS_FILE}
+RUN echo 'export CASALD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> ${SETVARS_FILE}
+
+# Create logon file under $CASASRC dir
+RUN echo 'import sys' > ${CASA_LOGON_FILE}
+RUN echo "sys.path = [''] + sys.path" >> ${CASA_LOGON_FILE}
+
+# Clear CASA tar
+RUN rm -rf ${SOFTDIR_TAR}/casa${CASA_VERSION}.tar.gz || :
+
+
