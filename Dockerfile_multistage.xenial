@@ -1,0 +1,72 @@
+FROM sriggi/ubuntu16.04:latest as base
+MAINTAINER Simone Riggi "simone.riggi@gmail.com"
+
+ENV PATH=${PATH}
+
+## - DEFINE BASE IMAGES
+FROM sriggi/ubuntu16.04-mpi:latest as builder-mpi
+FROM sriggi/ubuntu16.04-jsoncpp:latest as builder-jsoncpp
+FROM sriggi/ubuntu16.04-root:latest as builder-root
+FROM sriggi/ubuntu16.04-opencv:latest as builder-opencv
+
+## - COPY SOFTWARE FROM BASE IMAGES 
+FROM base
+COPY --from=builder-mpi ${SOFTDIR}/openmpi ${SOFTDIR}/openmpi
+COPY --from=builder-jsoncpp ${SOFTDIR}/jsoncpp ${SOFTDIR}/jsoncpp
+COPY --from=builder-root ${SOFTDIR}/ROOT ${SOFTDIR}/ROOT
+##COPY --from=builder-root ${SOFTDIR}/rootlogon.C .
+COPY --from=builder-opencv ${SOFTDIR}/OpenCV ${SOFTDIR}/OpenCV
+
+## - SET MPI VARS
+ENV OPENMPI_VERSION="2.1.2"
+ENV OPENMPI_DIR="${SOFTDIR}/openmpi/v${OPENMPI_VERSION}"
+ENV PATH=${OPENMPI_DIR}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${OPENMPI_DIR}/lib:${LD_LIBRARY_PATH}
+ENV PKG_CONFIG_PATH=${OPENMPI_DIR}/lib/pkgconfig:${PKG_CONFIG_PATH}
+
+RUN echo "export OPENMPI_DIR=${OPENMPI_DIR}" >> ${SETVARS_FILE}
+RUN echo 'export PATH=$OPENMPI_DIR/bin:$PATH' >> ${SETVARS_FILE}
+RUN echo 'export LD_LIBRARY_PATH=$OPENMPI_DIR/lib:$LD_LIBRARY_PATH' >> ${SETVARS_FILE}
+RUN echo 'export PKG_CONFIG_PATH=$OPENMPI_DIR/lib/pkgconfig:$PKG_CONFIG_PATH' >> ${SETVARS_FILE}
+
+## - SET JSONCPP VARS
+ENV JSONCPP_DIR="${SOFTDIR}/jsoncpp/trunk"
+ENV JSONCPP_ROOT="${SOFTDIR}/jsoncpp/trunk"
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${JSONCPP_DIR}/lib
+ENV PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${JSONCPP_DIR}/lib/pkgconfig
+
+RUN echo "export JSONCPP_ROOT=${JSONCPP_DIR}" >> ${SETVARS_FILE}
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$JSONCPP_ROOT/lib' >> ${SETVARS_FILE}
+RUN echo 'export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$JSONCPP_ROOT/lib/pkgconfig' >> ${SETVARS_FILE}
+
+## - SET ROOT VARS
+ENV ROOT_VERSION="6.14.06"
+ENV ROOTSYS="${SOFTDIR}/ROOT/v${ROOT_VERSION}"
+##ENV ROOT_LOGON_DIR="${SOFTDIR}"
+##ENV ROOT_LOGON_FILE="${ROOT_LOGON_DIR}/rootlogon.C"
+ENV PATH=${PATH}:${ROOTSYS}/bin
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOTSYS}/lib:${ROOTSYS}/root/lib
+ENV PYTHONPATH=${PYTHONPATH}:${ROOTSYS}/lib
+
+RUN echo "export ROOTSYS=${ROOTSYS}" >> ${SETVARS_FILE}
+##RUN echo 'export ROOT_LOGON_DIR='"$ROOT_LOGON_DIR" >> ${SETVARS_FILE}
+RUN echo 'export PATH=$PATH:$ROOTSYS/bin' >> ${SETVARS_FILE}
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib:$ROOTSYS/root/lib' >> ${SETVARS_FILE}
+RUN echo 'export PYTHONPATH=$PYTHONPATH:$ROOTSYS/lib' >> ${SETVARS_FILE}
+
+## - SET OPENCV VARS
+ENV OPENCV_VERSION="3.4.11"
+ENV OPENCV_DIR="${SOFTDIR}/OpenCV/v${OPENCV_VERSION}"
+ENV PATH=${PATH}:${OPENCV_DIR}/bin
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${OPENCV_DIR}/lib
+ENV PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${OPENCV_DIR}/lib/pkgconfig
+		
+RUN echo "export OPENCV_DIR=${OPENCV_DIR}" >> ${SETVARS_FILE}
+RUN echo 'export PATH=$PATH:$OPENCV_DIR/bin' >> ${SETVARS_FILE}
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OPENCV_DIR/lib' >> ${SETVARS_FILE}
+RUN echo 'export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$OPENCV_DIR/lib/pkgconfig' >> ${SETVARS_FILE}
+
+
+
+## - SET ENTRY POINT
+ENTRYPOINT ["/bin/sh", "-c"]
