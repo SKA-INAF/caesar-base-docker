@@ -4,8 +4,10 @@ MAINTAINER Simone Riggi "simone.riggi@gmail.com"
 #################################
 ###    OPENMPI
 #################################
-ENV OPENMPI_VERSION="2.1.2"
-ENV OPENMPI_URL="https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-${OPENMPI_VERSION}.tar.gz"
+##ENV OPENMPI_VERSION="2.1.2"
+ENV OPENMPI_VERSION="4.1.2"
+##ENV OPENMPI_URL="https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-${OPENMPI_VERSION}.tar.gz"
+ENV OPENMPI_URL="https://www.open-mpi.org/software/ompi/v4.1/downloads/openmpi-${OPENMPI_VERSION}.tar.gz"
 ENV OPENMPI_SRC_DIR="${SOFTDIR_SRCS}/openmpi-${OPENMPI_VERSION}"	
 ENV OPENMPI_INSTALL_DIR="${SOFTDIR}/openmpi/v${OPENMPI_VERSION}"
 

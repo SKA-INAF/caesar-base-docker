@@ -5,7 +5,8 @@ MAINTAINER Simone Riggi "simone.riggi@gmail.com"
 ###    OPENCV
 #################################
 ##ENV OPENCV_VERSION="3.4.0"
-ENV OPENCV_VERSION="3.4.11"
+##ENV OPENCV_VERSION="3.4.11"
+ENV OPENCV_VERSION="4.5.4"
 ENV OPENCV_URL="https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.tar.gz"
 ENV OPENCV_EXTRA_MODULES_REPO_URL="https://github.com/opencv/opencv_contrib/archive/${OPENCV_VERSION}.tar.gz"
 ENV OPENCV_SRC_DIR="${SOFTDIR_SRCS}/opencv-${OPENCV_VERSION}"	

@@ -71,7 +71,7 @@ RUN unset PYTHONPATH && curl https://bootstrap.pypa.io/get-pip.py | python3.6
 RUN pip3.6 install --upgrade numpy astropy scipy scikit-image scikit-learn matplotlib six argparse photutils ipython region
 
 ENV PYTHONPATH=/usr/lib/python3.6:/usr/lib/python3.6/site-packages:/usr/lib/python3.6/dist-packages:/usr/lib/python3.6/plat-x86_64-linux-gnu:/usr/lib/python3.6/lib-tk:/usr/lib/python3.6/lib-old:/usr/lib/python3.6/lib-dynload:/usr/local/lib/python3.6/dist-packages:${PYTHONPATH}
-RUN echo "export PYTHONPATH=${PYTHONPATH}" >> ${SETVARS_FILE}
+RUN echo "export PYTHONPATH=${PYTHONPATH}:$PYTHONPATH" >> ${SETVARS_FILE}
 
 
 #################################
